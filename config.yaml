@@ -1,0 +1,14 @@
+server:
+  addr: ":8080"
+  model: "debug"
+log:
+  file: "credit-api.log"
+  level: "debug"
+db:
+  host: "192.168.1.125"
+  port: 3306
+  username: "root"
+  password: "123456"
+  database: "credit"
+  maxOpenConn: 50
+  maxIdleConn: 10
