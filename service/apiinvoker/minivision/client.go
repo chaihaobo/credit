@@ -18,6 +18,7 @@ type (
 		//	FaceCompare 人脸比对
 		//	输入两张base64照片,比对相似度
 		FaceCompare(ctx context.Context, request *minivision.FaceCompareRequest) (*minivision.BaseResponse, error)
+
 		//	LiveBody 活体检测
 		//	输入一张base64照片,检查是否真人拍摄
 		LiveBody(ctx context.Context, request *minivision.LiveBodyRequest) (*minivision.BaseResponse, error)

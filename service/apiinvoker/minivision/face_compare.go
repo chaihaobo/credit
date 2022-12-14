@@ -36,9 +36,9 @@ func (f *faceCompareInvoker) Invoke(c *gin.Context) (any, error) {
 	}
 	f.res.Logger().Info(ctx, "minivision face compare response", zap.Any("result", compareResult))
 	if !compareResult.Normal() {
-
+		return nil, compareResult.Error()
 	}
-	return nil, nil
+	return compareResult.Data.(float64), nil
 }
 
 func NewFaceCompareInvoker(res resource.Resource, infra infrastructure.Infrastructure) FaceCompareInvoker {
