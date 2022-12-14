@@ -5,14 +5,14 @@ package enum
 
 const (
 	ApiPathUnKnow      ApiPath = "unknow"
-	ApiPathTest        ApiPath = "test"
 	ApiPathFaceCompare ApiPath = "faceCompare"
+	ApiPathLiveBody    ApiPath = "liveBody"
 )
 
 var apiPathMap = map[string]ApiPath{
 	string(ApiPathUnKnow):      ApiPathUnKnow,
-	string(ApiPathTest):        ApiPathTest,
 	string(ApiPathFaceCompare): ApiPathFaceCompare,
+	string(ApiPathLiveBody):    ApiPathLiveBody,
 }
 
 type ApiPath string

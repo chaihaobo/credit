@@ -5,6 +5,7 @@ import (
 	"credit-platform/infrastructure"
 	"credit-platform/model/api"
 	"credit-platform/resource"
+	"credit-platform/service/api/invoker"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -28,7 +29,7 @@ func (f *faceCompareInvoker) Invoke(c *gin.Context) (any, error) {
 		return nil, err
 	}
 	minivisionFaceCompareRequest := req.ToMinivisionFaceCompareRequest()
-	f.res.Logger().Info(ctx, "minivision face compare request", zap.Any("param", minivisionFaceCompareRequest))
+	f.res.Logger().Info(ctx, "minivision face compare request")
 	compareResult, err := f.client.FaceCompare(ctx, minivisionFaceCompareRequest)
 	if err != nil {
 		f.res.Logger().Error(ctx, "minivision face compare error", zap.Error(err))
@@ -41,7 +42,7 @@ func (f *faceCompareInvoker) Invoke(c *gin.Context) (any, error) {
 	return compareResult.Data.(float64), nil
 }
 
-func NewFaceCompareInvoker(res resource.Resource, infra infrastructure.Infrastructure) FaceCompareInvoker {
+func NewFaceCompareInvoker(res resource.Resource, infra infrastructure.Infrastructure) invoker.Invoker {
 	return &faceCompareInvoker{
 		client: newClient(res, infra),
 		res:    res,

@@ -1,7 +1,7 @@
 // Package service
 // @author： Boice
 // @createTime：2022/11/29 17:56
-package service
+package api
 
 import (
 	"context"
@@ -10,24 +10,23 @@ import (
 	"credit-platform/entity"
 	"credit-platform/infrastructure"
 	"credit-platform/resource"
-	"credit-platform/service/apiinvoker"
 	"credit-platform/util"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
 type (
-	ApiService interface {
+	Service interface {
 		Invoke(c *gin.Context, apiPath enum.ApiPath) (any, error)
 	}
-	apiService struct {
+	service struct {
 		res               resource.Resource
 		infra             infrastructure.Infrastructure
-		apiInvokerFactory apiinvoker.Factory
+		apiInvokerFactory InvokerFactory
 	}
 )
 
-func (a *apiService) Invoke(c *gin.Context, apiPath enum.ApiPath) (any, error) {
+func (a *service) Invoke(c *gin.Context, apiPath enum.ApiPath) (any, error) {
 	ctx := c.Request.Context()
 	if apiPath == enum.ApiPathUnKnow {
 		return nil, constant.ErrApiInvalid
@@ -57,7 +56,10 @@ func (a *apiService) Invoke(c *gin.Context, apiPath enum.ApiPath) (any, error) {
 	}
 	// 执行 api
 	invoke, err := apiInvoker.Invoke(c)
+	// 保存api调用日志
+	a.saveApiInvokeLog(ctx, customer, api, err)
 	if err != nil {
+		a.infra.Repository().Commit(ctx)
 		return nil, err
 	}
 	//	扣减用户余额
@@ -67,14 +69,12 @@ func (a *apiService) Invoke(c *gin.Context, apiPath enum.ApiPath) (any, error) {
 		a.res.Logger().Error(ctx, "api service update customer balance error", zap.Error(err))
 		return nil, constant.ErrInternalServerError
 	}
-	// 保存api调用日志
-	a.saveApiInvokeLog(ctx, customer, api, err)
 	a.infra.Repository().Commit(ctx)
 	return invoke, nil
 }
 
 //	saveApiInvokeLog 保存api调用日志
-func (a *apiService) saveApiInvokeLog(ctx context.Context, customer *entity.Customer, api *entity.Api, err error) {
+func (a *service) saveApiInvokeLog(ctx context.Context, customer *entity.Customer, api *entity.Api, err error) {
 	log := entity.NewApiCallLog(util.ContextRequestID(ctx), customer, api, err)
 	err = a.infra.Repository().ApiCallLog().Create(ctx, log)
 	if err != nil {
@@ -82,10 +82,10 @@ func (a *apiService) saveApiInvokeLog(ctx context.Context, customer *entity.Cust
 	}
 }
 
-func newApiService(infra infrastructure.Infrastructure, res resource.Resource) ApiService {
-	return &apiService{
+func NewService(infra infrastructure.Infrastructure, res resource.Resource) Service {
+	return &service{
 		res:               res,
 		infra:             infra,
-		apiInvokerFactory: apiinvoker.NewFactory(res, infra),
+		apiInvokerFactory: NewInvokerFactory(res, infra),
 	}
 }

@@ -42,11 +42,11 @@ func (c *client) FaceCompare(ctx context.Context, request *minivision.FaceCompar
 	baseRequest, token := c.baseParam()
 	request.BaseRequest = baseRequest
 	result := new(minivision.BaseResponse)
-	_, err := c.c.R().
+	_, err := c.c.R().EnableTrace().
 		SetContext(ctx).
 		SetBody(request).
 		SetHeader("Token", token).
-		SetBody(result).
+		SetResult(result).
 		Post(c.res.Config().Api.Minivision.Url + "/api/v3/compare")
 	if err != nil {
 		return nil, err
@@ -62,8 +62,8 @@ func (c *client) LiveBody(ctx context.Context, request *minivision.LiveBodyReque
 		SetContext(ctx).
 		SetBody(request).
 		SetHeader("Token", token).
-		SetBody(result).
-		Post(c.res.Config().Api.Minivision.Url + "/api/v3/liveBody")
+		SetResult(result).
+		Post(c.res.Config().Api.Minivision.Url + "/api/v3/livingBody")
 	if err != nil {
 		return nil, err
 	}

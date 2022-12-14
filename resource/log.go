@@ -5,6 +5,7 @@ package resource
 
 import (
 	"context"
+	"credit-platform/constant"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -31,23 +32,31 @@ func (l *logger) Zap() *zap.Logger {
 }
 
 func (l *logger) Panic(ctx context.Context, msg string, fields ...zap.Field) {
-	l.log.Panic(msg, fields...)
+	l.log.Panic(msg, l.withBaseFields(ctx, fields...)...)
 }
 
 func (l *logger) Info(ctx context.Context, msg string, fields ...zap.Field) {
-	l.log.Info(msg, fields...)
+	l.log.Info(msg, l.withBaseFields(ctx, fields...)...)
 }
 
 func (l *logger) Error(ctx context.Context, msg string, fields ...zap.Field) {
-	l.log.Error(msg, fields...)
+	l.log.Error(msg, l.withBaseFields(ctx, fields...)...)
 }
 
 func (l *logger) Debug(ctx context.Context, msg string, fields ...zap.Field) {
-	l.log.Debug(msg, fields...)
+	l.log.Debug(msg, l.withBaseFields(ctx, fields...)...)
 }
 
 func (l *logger) Warn(ctx context.Context, msg string, fields ...zap.Field) {
-	l.log.Warn(msg, fields...)
+	l.log.Warn(msg, l.withBaseFields(ctx, fields...)...)
+}
+
+func (l *logger) withBaseFields(ctx context.Context, fields ...zap.Field) []zap.Field {
+	requestID, ok := ctx.Value(constant.CtxRequestID).(string)
+	if ok {
+		fields = append(fields, zap.String("request_id", requestID))
+	}
+	return fields
 }
 
 func newLogger(config Config) Logger {

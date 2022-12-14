@@ -14,6 +14,6 @@ db:
   maxIdleConn: 10
 api:
   minivision:
-    url: "https://minivision.com"
-    appKey: "test"
-    appSecret: "test"
+    url: "http://8.219.215.61:58682"
+    appKey: "7c060867c16cf84c87710cf4576e4ea0"
+    appSecret: "xskj2019"

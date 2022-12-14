@@ -14,7 +14,13 @@ import (
 	"credit-platform/transport/http/middleware"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/locales/en"
+	ut "github.com/go-playground/universal-translator"
+	"github.com/go-playground/validator/v10"
+	enTranslations "github.com/go-playground/validator/v10/translations/en"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	netHttp "net/http"
 	"time"
 )
@@ -25,12 +31,13 @@ type (
 		Shutdown()
 	}
 	http struct {
-		res    resource.Resource
-		ctrl   controller.Controller
-		svc    service.Service
-		infra  infrastructure.Infrastructure
-		g      *gin.Engine
-		server *netHttp.Server
+		res        resource.Resource
+		ctrl       controller.Controller
+		svc        service.Service
+		infra      infrastructure.Infrastructure
+		g          *gin.Engine
+		server     *netHttp.Server
+		translator ut.Translator
 	}
 )
 
@@ -61,9 +68,18 @@ func (h *http) wrapperController(fun func(*gin.Context) (any, error)) gin.Handle
 		var serviceError = constant.Success
 		got, err := fun(c)
 		if err != nil {
+			h.res.Logger().Error(ctx, "http request error", zap.Error(err))
 			switch err.(type) {
 			case constant.ServiceError:
 				serviceError = err.(constant.ServiceError)
+			case validator.ValidationErrors:
+				validationErrors := err.(validator.ValidationErrors)
+				serviceError = constant.ServiceError{
+					HttpCode: netHttp.StatusBadRequest,
+					Code:     "4001",
+					Message:  validationErrors[0].Translate(h.translator),
+				}
+
 			default:
 				serviceError = constant.ErrInternalServerError
 			}
@@ -78,17 +94,36 @@ func New(res resource.Resource, svc service.Service, infra infrastructure.Infras
 	c := controller.New(res, svc)
 	gin.SetMode(res.Config().Server.Model)
 	g := gin.New()
-	g.Use(ginzap.Ginzap(res.Logger().Zap(), time.RFC3339, true), ginzap.RecoveryWithZap(res.Logger().Zap(), true))
+	g.Use(ginzap.GinzapWithConfig(res.Logger().Zap(), &ginzap.Config{
+		TimeFormat: time.RFC3339,
+		UTC:        true,
+		Context: func(c *gin.Context) []zapcore.Field {
+			field := make([]zapcore.Field, 0)
+			requestID, ok := c.Request.Context().Value(constant.CtxRequestID).(string)
+			if ok {
+				field = append(field, zap.String("request_id", requestID))
+			}
+			return field
+		},
+	}),
+		ginzap.RecoveryWithZap(res.Logger().Zap(), true))
 	server := &netHttp.Server{
 		Addr:    res.Config().Server.Addr,
 		Handler: g,
 	}
+
+	trans, _ := ut.New(en.New()).GetTranslator("en")
+	if validate, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		enTranslations.RegisterDefaultTranslations(validate, trans)
+	}
+
 	return &http{
-		res:    res,
-		ctrl:   c,
-		svc:    svc,
-		infra:  infra,
-		g:      g,
-		server: server,
+		res:        res,
+		ctrl:       c,
+		svc:        svc,
+		infra:      infra,
+		g:          g,
+		server:     server,
+		translator: trans,
 	}
 }

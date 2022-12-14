@@ -1,7 +1,7 @@
 // Package apiinvoker
 // @author： Boice
 // @createTime：2022/11/29 18:53
-package apiinvoker
+package invoker
 
 import "github.com/gin-gonic/gin"
 
