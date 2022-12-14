@@ -12,3 +12,8 @@ db:
   database: "credit"
   maxOpenConn: 50
   maxIdleConn: 10
+api:
+  minivision:
+    url: "https://minivision.com"
+    appKey: "test"
+    appSecret: "test"

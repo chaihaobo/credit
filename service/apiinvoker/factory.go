@@ -7,6 +7,7 @@ import (
 	"credit-platform/constant/enum"
 	"credit-platform/infrastructure"
 	"credit-platform/resource"
+	"credit-platform/service/apiinvoker/minivision"
 )
 
 type (
@@ -23,6 +24,8 @@ func (f *factory) Invoker(path enum.ApiPath) Invoker {
 	switch path {
 	case enum.ApiPathTest:
 		return newTestInvoker(f.res, f.infra)
+	case enum.ApiPathFaceCompare:
+		return minivision.NewFaceCompareInvoker(f.res, f.infra)
 	default:
 		return nil
 

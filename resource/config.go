@@ -26,6 +26,13 @@ type Config struct {
 		MaxOpenConn int    `yaml:"maxOpenConn"`
 		MaxIdleConn int    `yaml:"maxIdleConn"`
 	} `yaml:"db"`
+	Api struct {
+		Minivision struct {
+			Url       string `yaml:"url"`
+			AppKey    string `yaml:"appKey"`
+			AppSecret string `yaml:"appSecret"`
+		} `yaml:"minivision"`
+	} `yaml:"api"`
 }
 
 func newConfig(configPath string) Config {
